@@ -1,0 +1,283 @@
+---
+title: "Visible_Analysis"
+author: "Patience Heath"
+date: "2025-04-18"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidytext)
+library(tidyverse)
+library(dplyr)
+library(janitor)
+library(tokenizers)
+library(wordcloud)
+library(reshape2)
+library(stringr)
+library(lubridate)
+```
+
+### Visible Survey Analysis based off Google PlayStore Reviews 
+
+I focused this analysis only on on boarding to quickly to find high-impact issues that can be potentially solved.
+
+
+```{r, echo = FALSE}
+visible_reviews = read_csv("Visible_Reviews.csv", show_col_types = FALSE)
+```
+
+
+```{r, echo = FALSE}
+# names(visible_reviews)
+```
+
+## 10,986 reviews pulled from google play store 
+
+```{r, echo = FALSE}
+dim(visible_reviews)[1]
+```
+
+## Only keeping the columns that include content (which is review), score which is rating, how many people agreed with the comment, when the comment was made and the version of the app it corresponds to
+
+```{r, echo = FALSE}
+visible_reviews <- visible_reviews %>%
+  dplyr::select(content, score, thumbsUpCount,appVersion,at)
+```
+
+```{r, echo = FALSE}
+## making all rows lowercase so I can do regex 
+visible_lower <- visible_reviews %>%
+  mutate(across(where(is.character), tolower))
+```
+
+
+## Filter rows with content that includes app and interface 
+
+```{r filter app and interface, echo = FALSE}
+app = visible_lower %>% filter(str_detect(content, "app"))
+interface = visible_lower %>% filter(str_detect(content, "interface"))
+
+
+```
+
+## Average score of reviews 
+
+```{r avg review rating, echo = FALSE}
+mean(visible_reviews$score)
+```
+
+## Questions we can ask. How do these ratings change once we filter by app and interface?
+
+Question: Are users that mention the interface and app generally satisfied ?
+- Looking at the mean obtained they aren't that good when there is a mention of app and/or interface.
+
+```{r avg rating on app and interface filter, echo = FALSE}
+mean(app$score)
+mean(interface$score)
+```
+
+## Lets look at the specific count of reviews eg.. how many 1 star left etc etc..
+
+There are an overwhelming amount of 1 star views when the app is mentioned in the review.
+This tells me that just based off the Google Reviews users feel some type of frustration towards the app.
+
+(once again this can be bias of course because people who have a neutral opinion may be less likely to actually write a review)
+Since I don't have access to specific data. I am going through the reviews as my source.
+
+```{r, echo = FALSE}
+app %>% dplyr::group_by(score) %>% dplyr::summarize(count = n()) %>%
+  ggplot(aes(x = as.factor(score), y = count)) + geom_col(color = "black", fill = "blue") + theme_minimal() +
+  labs(title = "ratings based on app mention in review ") + xlab("score")
+```
+
+
+```{r, echo = FALSE}
+low_reviews = visible_reviews %>% dplyr::filter(score <= 2)
+```
+
+ 
+## We are going to only focus on version 2.0... and above for this analysis 
+
+
+```{r, echo = FALSE}
+# visible_reviews %>% dplyr::group_by(appVersion) %>% dplyr::summarize(count = n()) %>% arrange(desc(count))
+new_data = visible_reviews %>% dplyr::filter(str_detect(appVersion, "^2."))
+```
+
+## Since we are focusing on the onboarding process we will filter reviews that only discuss aspects of the process.
+
+Most of the complaints are about the login process and how long it takes.
+There needs to be an easy way to log in? Maybe using FaceId , Google login etc.. 
+
+```{r}
+onboarding_data = new_data %>% filter(str_detect(content, "signup|account|creation|onboarding|registration|setup"))
+
+```
+
+
+## Text Minning and Sentiment Analysis 
+
+
+
+```{r, echo = FALSE}
+content = onboarding_data$content
+N = length(content)
+
+text_df = tibble(line = 1:N , content)
+
+text_df = text_df %>% 
+  unnest_tokens(word, content)
+
+data(stop_words)
+
+tidy_reviews = text_df %>% anti_join(stop_words)
+
+ # tidy_reviews %>% dplyr::group_by(word) %>% dplyr::summarize(count = n()) %>% dplyr::arrange(desc(count)) %>% slice_head(n = 6) 
+ # ggplot(aes(x = reorder(word, -count), y = count)) + geom_col(color = "white", fill = "blue") + theme_minimal() + ggtitle("Common words in descending order") + xlab("words")
+```
+
+## Most common words on the low review data
+
+```{r, echo = FALSE}
+lower_content = onboarding_data$content
+N = length(lower_content)
+
+lower_text = tibble(line = 1:N, lower_content)
+
+lower_text = lower_text %>% unnest_tokens(word, lower_content)
+
+data(stop_words)
+
+tidy_lower = lower_text %>% anti_join(stop_words)
+
+
+tidy_lower %>% dplyr::group_by(word) %>% dplyr::summarize(count = n()) %>% dplyr::arrange(desc(count)) %>% slice_head(n = 6) %>% 
+  ggplot(aes(x = reorder(word, -count), y = count)) + geom_col(color = "black", fill = "blue") + theme_minimal() + ggtitle("Most common words associated with onboarding") + xlab("words")
+
+
+
+
+```
+## Word bubble on most common positive words 
+
+A lot of people complain about how slow the app is and how is crashes a lot and is buggy. 
+These are issues that I can't fix of course. 
+
+```{r, echo = FALSE}
+tidy_lower %>% inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("black", "blue"),
+                   max.words = 100)
+```
+
+```{r, echo = FALSE}
+onboarding_data$date = as.Date(onboarding_data$at)
+
+onboarding_data$date = format(as.Date(onboarding_data$date), "%Y-%m") #Changing the format to year - month
+```
+
+
+```{r, echo = FALSE, warning = FALSE}
+content = onboarding_data$content
+N = length(content)
+
+text_df = tibble(line = 1:N , content)
+
+text_df = text_df %>% 
+  unnest_tokens(word, content)
+
+data(stop_words)
+
+tidy_reviews = text_df %>% anti_join(stop_words) # line is customer word is word 
+# we need to know lines that have price in it 
+
+
+update_percent = onboarding_data %>% dplyr::filter(str_detect(content, regex("account", ignore.case = TRUE))) %>% dplyr::mutate(line = 1:length(content)) %>% unnest_tokens(word, content) %>% inner_join(get_sentiments("bing"), by = "word") %>% dplyr::group_by(line) %>% dplyr::summarize(positive_count = sum(sentiment == "positive"), negative_count = sum(sentiment == "negative")) %>% dplyr::summarize(percentage = sum(positive_count) / (sum(positive_count + negative_count)))
+
+service_percent = onboarding_data %>% dplyr::filter(str_detect(content, regex("service", ignore.case = TRUE))) %>% dplyr::mutate(line = 1:length(content)) %>% unnest_tokens(word, content) %>% inner_join(get_sentiments("bing"), by = "word") %>% dplyr::group_by(line) %>% dplyr::summarize(positive_count = sum(sentiment == "positive"), negative_count = sum(sentiment == "negative")) %>% dplyr::summarize(percentage = sum(positive_count) / (sum(positive_count + negative_count)))
+
+visible_percent = onboarding_data %>% dplyr::filter(str_detect(content, regex("visible", ignore.case = TRUE))) %>% dplyr::mutate(line = 1:length(content)) %>% unnest_tokens(word, content) %>% inner_join(get_sentiments("bing"), by = "word") %>% dplyr::group_by(line) %>% dplyr::summarize(positive_count = sum(sentiment == "positive"), negative_count = sum(sentiment == "negative")) %>% dplyr::summarize(percentage = sum(positive_count) / (sum(positive_count + negative_count)))
+
+phone_percent = onboarding_data %>% dplyr::filter(str_detect(content, regex("phone", ignore.case = TRUE))) %>% dplyr::mutate(line = 1:length(content)) %>% unnest_tokens(word, content) %>% inner_join(get_sentiments("bing"), by = "word") %>% dplyr::group_by(line) %>% dplyr::summarize(positive_count = sum(sentiment == "positive"), negative_count = sum(sentiment == "negative")) %>% dplyr::summarize(percentage = sum(positive_count) / (sum(positive_count + negative_count)))
+
+setup_percent = onboarding_data %>% dplyr::filter(str_detect(content, regex("setup", ignore.case = TRUE))) %>% dplyr::mutate(line = 1:length(content)) %>% unnest_tokens(word, content) %>% inner_join(get_sentiments("bing"), by = "word") %>% dplyr::group_by(line) %>% dplyr::summarize(positive_count = sum(sentiment == "positive"), negative_count = sum(sentiment == "negative")) %>% dplyr::summarize(percentage = sum(positive_count) / (sum(positive_count + negative_count)))
+
+app_percent = onboarding_data %>% dplyr::filter(str_detect(content, regex("app", ignore.case = TRUE))) %>% dplyr::mutate(line = 1:length(content)) %>% unnest_tokens(word, content) %>% inner_join(get_sentiments("bing"), by = "word") %>% dplyr::group_by(line) %>% dplyr::summarize(positive_count = sum(sentiment == "positive"), negative_count = sum(sentiment == "negative")) %>% dplyr::summarize(percentage = sum(positive_count) / (sum(positive_count + negative_count)))
+
+
+login_percent = onboarding_data %>% dplyr::filter(str_detect(content, regex("login", ignore.case = TRUE))) %>% dplyr::mutate(line = 1:length(content)) %>% unnest_tokens(word, content) %>% inner_join(get_sentiments("bing"), by = "word") %>% dplyr::group_by(line) %>% dplyr::summarize(positive_count = sum(sentiment == "positive"), negative_count = sum(sentiment == "negative")) %>% dplyr::summarize(percentage = sum(positive_count) / (sum(positive_count + negative_count)))
+
+login_percent
+
+
+
+```
+
+## Graph of the percentage of positive opinions per word
+
+
+
+```{r, echo = FALSE}
+
+new_df = data.frame(
+  words = c("update", "service", "visible", "phone", "setup", "app", "login"),
+  count = c(155, 84, 23, 57, 45, 76,8),
+  percentage = c(0.4514039, 0.5065789, 0.3953488 , 0.4886878, 0.6607143 , 0.5291829, 0.2631579)
+)
+
+ggplot(new_df, aes(x = reorder(words, -count))) +
+  # Bar plot for count
+  geom_col(aes(y = count), fill = "blue") +
+  geom_line(aes(y = percentage * max(count), group = 1), color = "black", size = 1.5) +
+  geom_point(aes(y = percentage * max(count)), color = "black", size = 3) +
+  
+  scale_y_continuous(
+    name = "# of Opinions",
+    sec.axis = sec_axis(~ . / max(new_df$count), name = "% Positive", labels = scales::percent)
+  ) +
+  xlab("Aspect") +
+  theme_bw() +
+  ggtitle("% of Positive Opinions and # of Opinions") +
+  theme(
+    axis.title.y.left = element_text(color = "blue"),
+    axis.title.y.right = element_text(color = "black"),
+  )
+```
+
+ 
+## The most common complaint is that the login/ sign in process is frustrating
+some quotes pulled from the data
+
+"The app is useless. I can't even access my account. All it does it keep saying my cart is empty and asks me to keep shopping."
+
+"Worst app I have ever used, period. Login function does not work making it impossible to access your account and do anything."
+
+## A lot of users like how easy the setup is so we will take that into consideration. 
+
+
+```{r,echo = FALSE}
+login_data = onboarding_data %>% dplyr::filter(str_detect(content, "login| sign in | sign up"))
+content = login_data$content
+N = length(content)
+
+text_df = tibble(line = 1:N , content)
+
+text_df = text_df %>% 
+  unnest_tokens(word, content)
+
+data(stop_words)
+
+tidy_reviews = text_df %>% anti_join(stop_words)
+
+tidy_reviews %>% inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("black", "blue"),
+                   max.words = 100)
+```
+
+
