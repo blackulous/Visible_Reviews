@@ -118,7 +118,7 @@ onboarding_data = new_data %>% filter(str_detect(content, "signup|account|creati
 ```
 
 
-## Text Minning and Sentiment Analysis 
+## Text Mining and Sentiment Analysis 
 
 
 
