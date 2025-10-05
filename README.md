@@ -1,13 +1,13 @@
-# 📱 Visible by Verizon Onboarding Redesign — Data-Driven UX Case Study
+#  Visible by Verizon Onboarding Redesign — Data-Driven UX Case Study
 
-## 📘 Overview  
+##  Overview  
 This project combines **data science** and **UX research** to improve the **Visible by Verizon** mobile onboarding experience.  
 Using **Python web scraping**, I collected and analyzed **10,000+ Google Play reviews** to identify user pain points and inform the redesign process.  
 These insights guided **usability studies, user journeys, and a complete Figma redesign** of the onboarding flow and information architecture.
 
 ---
 
-## 🎯 Objectives  
+##  Objectives  
 - Identify top friction points in onboarding and activation flows.  
 - Quantify recurring themes in user feedback (e.g., billing confusion, SIM activation, app crashes).  
 - Combine **qualitative interviews** and **quantitative sentiment analysis** to validate user frustrations.  
@@ -15,7 +15,7 @@ These insights guided **usability studies, user journeys, and a complete Figma r
 
 ---
 
-## 🧮 Data Collection & Analysis  
+##  Data Collection & Analysis  
 
 ### 🔹 Web Scraping
 - **Source:** Google Play Store reviews (Visible by Verizon app)  
@@ -35,7 +35,7 @@ These insights guided **usability studies, user journeys, and a complete Figma r
 
 ---
 
-## 💻 Technical Stack  
+##  Technical Stack  
 
 | Category | Tools Used |
 |-----------|-------------|
@@ -57,16 +57,6 @@ These insights guided **usability studies, user journeys, and a complete Figma r
 5. **Usability Testing:** Conducted 2 rounds of testing  
 6. **High-Fidelity Redesign:** Applied brand-consistent design system 
 
----
-
-## 🎨 Design Highlights  
-
-| Before | After |
-|--------|-------|
-| Lengthy setup instructions | Streamlined 3-screen onboarding |
-| Vague progress indicators | Added clear progress bar and SIM-status feedback |
-| Limited transparency | Contextual tooltips |
-| Text-heavy screens | Introduced iconography and micro-animations for clarity |
 
 ---
 
