@@ -58,13 +58,5 @@ These insights guided **usability studies, user journeys, and a complete Figma r
 6. **High-Fidelity Redesign:** Applied brand-consistent design system 
 
 
----
-
-## 📈 Results  
-
-- **Onboarding time reduced by ~40%** in usability tests  
-- **Task success rate:** 90% vs 62% baseline 
-- **Information clarity:** improved across all 6 participants
-- **Screen Preference** users unanimously preferred new wearables screen design over previous
 
 
