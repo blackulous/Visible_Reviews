@@ -5,6 +5,8 @@ This project combines **data science** and **UX research** to improve the **Visi
 Using **Python web scraping**, I collected and analyzed **10,000+ Google Play reviews** to identify user pain points and inform the redesign process.  
 These insights guided **usability studies, user journeys, and a complete Figma redesign** of the onboarding flow and information architecture.
 
+📄 [View Full Research Report](assets/Visible_Research.pdf)
+
 ---
 
 ##  Objectives  
